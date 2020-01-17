@@ -1,13 +1,143 @@
 package hw3
 
 object Main {
-  def standardDeviation(vector: List[Double]): Double = ???
+  def standardDeviation(vector: List[Double]): Double =
+    {
+      if(vector.isEmpty) return 0
+      val sum = vector.sum
+      val avg = sum/vector.length
+      val sum2 = vector.foldLeft(0d)((acc,x)=>(acc + (x-avg)*(x-avg)))
+      val avg2 = sum2/vector.length
+      math.sqrt(avg2)
+    }
 
-  def letterFrequencyRanking(corpus: String): String = ???
+  def letterFrequencyRanking(corpus: String): String =
+    {
+      val sortCorp = corpus.filter((c:Char) => c.isLetter && !List('ˇ','´').contains(c)).toLowerCase.toCharArray.sorted
+      //there is a bit problem with accents, since they shoudn't be letters, but are counted as one by .isLetter
+      //and if I count only a-z then letters like 'ž' are omited completely, so that's why I had to do this stupid roughpatch
+      //if you would want only english letters, man, that would be easy since I could just convert to lowercase and then take characters between 'a' and 'z'
+      //please, next time think of the czech students... ('_')
+      if(sortCorp.length == 0) return ""
+      var char = sortCorp(0)
+      var count = 1;
+      var map = Map[Char,Int]()
+      for(i <- 1 until sortCorp.length) {
+        if (sortCorp(i) == char) {
+          count += 1;
+        }
+        else {
+          map = map + (char -> count)
+          char = sortCorp(i)
+          count = 1;
+        }
+      }
+      map = map + (char -> count)
+      var out : StringBuilder = new StringBuilder("")
+      while(map.nonEmpty)
+        {
+          val c = firstMax(map)
+          out = (out += c)
+          map = map.removed(c)
+        }
+      out.mkString
+    }
+  def firstMax(map: Map[Char,Int]):Char =
+  {
+    var max:Int = 0
+    var char:Char = ' '
+    for(i <- map)
+    {
+      if(i._2>max)
+        {
+          char = i._1
+          max = i._2
+        }
+    }
+    char
+  }
 
-  def romanji(katakana: String): String = ???
+  def romanji(katakana: String): String =
+    {
+      var builder:StringBuilder = new StringBuilder("")
+      var init = true
+      var lastChar = ' '
+      var currChar = ' '
+      for(c <- katakana)
+        {
+          if (init) {
+            currChar = c
+            init = false
+          }
+          else {
+            lastChar = currChar
+            currChar = c
+            builder = builder ++= processChars(lastChar, currChar)
+          }
+        }
+        builder = builder ++= processChars(currChar,' ')
+      builder.mkString
+    }
+  //transforms previous character based on current character (in some exceptions it also transforms the current character)
+  def processChars(prev: Char, curr: Char):String =
+    {
+      def ichanger(prev: Char, curr: Char, c: Char): String =
+      {
+        if (!Katakana.symbols(prev).contains('i') || Katakana.symbols(prev).length != 2) throw new IllegalArgumentException(curr + " must come after i")
+        val out = new StringBuilder(Katakana.symbols(prev).mkString)
+        ((out.setCharAt(1,'y')) += c).mkString
+      }
 
-  def gray(bits: Int): List[String] = ???
+      curr match{
+        case 'ー' =>
+        {
+          if(Katakana.special.contains(prev) || prev == 'ン') throw new IllegalArgumentException("ー must come after lengthenable character")
+          val out = new StringBuilder(Katakana.symbols(prev).mkString)
+          out.setCharAt(out.length()-1,Katakana.longVowels(out.last))
+          out.mkString
+        }
+        case 'ャ' => ichanger(prev,curr,'a')
+        case 'ュ' => ichanger(prev,curr,'u')
+        case 'ョ' => ichanger(prev,curr,'o')
+        case _:Char => if (curr == 'ッ' || !Katakana.special.contains(curr))
+        {
+          if(prev == ' ') return " "
+          if(prev == 'ッ')
+          {
+            if (!Katakana.symbols.contains(curr) || !Katakana.symbols(curr).contains('k')) throw new IllegalArgumentException("ッ must come before 'k' consonant")
+            return "k"
+          }
+          if(Katakana.special.contains(prev)) return ""
+          if(!Katakana.symbols.contains(prev)) throw new IllegalArgumentException("wrong '" + prev + "' character! only enter katakana characters and ' '")
+          Katakana.symbols(prev).mkString
+        } else  ""
+      }
+    }
+
+  def gray(bits: Int): List[String] =
+    {
+      if (bits < 0) throw new IllegalArgumentException("must not be negative")
+      if (bits == 0) return List()
+
+      var out = List[String]()
+
+      val max = 1 << bits;
+      for(n <- 0 until max){
+        val i = n ^ (n >> 1)
+        out = fullBits(i,bits) :: out
+      }
+      out.reverse
+    }
+  def fullBits(int: Int,length:Int): String =
+  {
+    val bit = int.toBinaryString
+    var out : StringBuilder = new StringBuilder("")
+    for(i <- bit.length() until length) {
+      out = (out+='0')
+    }
+    out = (out ++= bit)
+    out.mkString
+  }
 }
 
 object Katakana {
@@ -36,4 +166,5 @@ object Katakana {
     'u' -> 'ū',
     'o' -> 'ō'
   )
+  val special = List('ー','ャ','ュ','ョ','ッ')
 }

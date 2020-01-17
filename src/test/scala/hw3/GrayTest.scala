@@ -5,6 +5,14 @@ import org.scalatest.{FunSuite, Matchers}
 
 class GrayTest extends FunSuite with Matchers {
 
+  test("Gray example -1 bit") {
+    assertThrows[IllegalArgumentException](gray(-1))
+  }
+
+  test("Gray example 0 bit") {
+    gray(0) shouldBe List()
+  }
+
   test("Gray example 1 bit") {
     gray(1) shouldBe List("0", "1")
   }

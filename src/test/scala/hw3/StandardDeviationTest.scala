@@ -3,6 +3,7 @@ package hw3
 import hw3.Main.standardDeviation
 import org.scalatest.{FunSuite, Matchers}
 
+//not enough comprehention of the subject to make good tests
 class StandardDeviationTest extends FunSuite with Matchers {
   test("stddev example")     {
     /**
